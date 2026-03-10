@@ -486,9 +486,9 @@ async function loadOverview() {
       adminFetch('list_properties'),
       adminFetch('list_analyses')
     ]);
-    users    = uRes.users    || uRes || [];
-    props    = pRes.properties || pRes || [];
-    analyses = aRes.analyses  || aRes || [];
+    users    = Array.isArray(uRes) ? uRes : (uRes.users    || []);
+    props    = Array.isArray(pRes) ? pRes : (pRes.properties || []);
+    analyses = Array.isArray(aRes) ? aRes : (aRes.analyses   || aRes.deals || []);
   } catch(e) {
     console.error('n8n admin error:', e);
     // fallback to direct Supabase (works if RLS allows it)
@@ -571,7 +571,7 @@ async function loadUsers() {
   let all = [];
   try {
     const d = await adminFetch('list_users');
-    all = d.users || d || [];
+    all = Array.isArray(d) ? d : (d.users || []);
   } catch(e) {
     const { data } = await SB.from('user_profiles').select('*').order('created_at',{ascending:false});
     all = data || [];
@@ -630,7 +630,7 @@ async function loadDeals() {
   let deals = [];
   try {
     const d = await adminFetch('list_deals');
-    deals = d.deals || d || [];
+    deals = Array.isArray(d) ? d : (d.deals || d.analyses || []);
   } catch(e) {
     const { data } = await SB.from('deal_analysis')
       .select('*, properties(address,city,zip,asking_price,estimated_rehab,user_id)')
@@ -675,7 +675,7 @@ async function loadProperties() {
   let props = [];
   try {
     const d = await adminFetch('list_properties');
-    props = d.properties || d || [];
+    props = Array.isArray(d) ? d : (d.properties || []);
   } catch(e) {
     const { data } = await SB.from('properties').select('*').order('created_at',{ascending:false}).limit(100);
     props = data || [];
