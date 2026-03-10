@@ -440,8 +440,20 @@ tr:hover td { background:rgba(255,255,255,0.02); }
 // ── CONFIG ──
 const SUPABASE_URL  = 'https://euvbddxunitgiqduckwf.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1dmJkZHh1bml0Z2lxZHVja3dmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4MjMyMDQsImV4cCI6MjA4ODM5OTIwNH0.Fq3UwLA_VCPaoA7fShgT8nCk9xXw1sNENoZ_jZyz6Qs';
+const N8N_ADMIN    = 'https://n8n.properties714.com/webhook/gpai-admin-users';
 const { createClient } = supabase;
 const SB = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// ── Admin data fetcher — bypasses RLS via n8n ──
+async function adminFetch(action, payload={}) {
+  const res = await fetch(N8N_ADMIN, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action, ...payload })
+  });
+  if (!res.ok) throw new Error('n8n error ' + res.status);
+  return res.json();
+}
 
 // ── CLOCK ──
 function updateClock() {
@@ -467,15 +479,28 @@ async function loadAll() {
 
 // ── OVERVIEW ──
 async function loadOverview() {
-  const [usersRes, propsRes, analysisRes] = await Promise.all([
-    SB.from('user_profiles').select('*').order('created_at',{ascending:false}),
-    SB.from('properties').select('*').order('created_at',{ascending:false}).limit(30),
-    SB.from('deal_analysis').select('*').order('created_at',{ascending:false}).limit(30)
-  ]);
-
-  const users    = usersRes.data || [];
-  const props    = propsRes.data || [];
-  const analyses = analysisRes.data || [];
+  let users = [], props = [], analyses = [];
+  try {
+    const [uRes, pRes, aRes] = await Promise.all([
+      adminFetch('list_users'),
+      adminFetch('list_properties'),
+      adminFetch('list_analyses')
+    ]);
+    users    = uRes.users    || uRes || [];
+    props    = pRes.properties || pRes || [];
+    analyses = aRes.analyses  || aRes || [];
+  } catch(e) {
+    console.error('n8n admin error:', e);
+    // fallback to direct Supabase (works if RLS allows it)
+    const [uR, pR, aR] = await Promise.all([
+      SB.from('user_profiles').select('*').order('created_at',{ascending:false}),
+      SB.from('properties').select('*').order('created_at',{ascending:false}).limit(30),
+      SB.from('deal_analysis').select('*').order('created_at',{ascending:false}).limit(30)
+    ]);
+    users    = uR.data || [];
+    props    = pR.data || [];
+    analyses = aR.data || [];
+  }
 
   const pending  = users.filter(u => u.approval_status === 'pending');
   const approved = users.filter(u => u.approval_status === 'approved');
@@ -543,8 +568,14 @@ async function loadOverview() {
 
 // ── USERS ──
 async function loadUsers() {
-  const { data: users } = await SB.from('user_profiles').select('*').order('created_at',{ascending:false});
-  const all = users || [];
+  let all = [];
+  try {
+    const d = await adminFetch('list_users');
+    all = d.users || d || [];
+  } catch(e) {
+    const { data } = await SB.from('user_profiles').select('*').order('created_at',{ascending:false});
+    all = data || [];
+  }
   const pending  = all.filter(u => u.approval_status === 'pending');
   const approved = all.filter(u => u.approval_status === 'approved');
   const rejected = all.filter(u => u.approval_status === 'rejected');
@@ -596,10 +627,16 @@ function userRowHTML(u, showActions) {
 
 // ── DEALS ──
 async function loadDeals() {
-  const { data } = await SB.from('deal_analysis')
-    .select('*, properties(address,city,zip,asking_price,estimated_rehab,user_id)')
-    .order('created_at',{ascending:false}).limit(100);
-  const deals = data || [];
+  let deals = [];
+  try {
+    const d = await adminFetch('list_deals');
+    deals = d.deals || d || [];
+  } catch(e) {
+    const { data } = await SB.from('deal_analysis')
+      .select('*, properties(address,city,zip,asking_price,estimated_rehab,user_id)')
+      .order('created_at',{ascending:false}).limit(100);
+    deals = data || [];
+  }
 
   const el = document.getElementById('deals-table');
   if (!deals.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">⚡</div><p>Sin deals todavía</p></div>'; return; }
@@ -635,8 +672,14 @@ async function loadDeals() {
 
 // ── PROPERTIES ──
 async function loadProperties() {
-  const { data } = await SB.from('properties').select('*').order('created_at',{ascending:false}).limit(100);
-  const props = data || [];
+  let props = [];
+  try {
+    const d = await adminFetch('list_properties');
+    props = d.properties || d || [];
+  } catch(e) {
+    const { data } = await SB.from('properties').select('*').order('created_at',{ascending:false}).limit(100);
+    props = data || [];
+  }
 
   const el = document.getElementById('props-table');
   if (!props.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🏠</div><p>Sin propiedades todavía</p></div>'; return; }
