@@ -3,764 +3,410 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Properties714 — Admin Control</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<title>Properties714 — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root {
-  --bg: #060810;
-  --s1: #0d1021;
-  --s2: #131526;
-  --s3: #191c2e;
-  --border: rgba(255,255,255,0.08);
-  --border2: rgba(255,255,255,0.14);
-  --text: #f0eee8;
-  --muted: rgba(240,238,232,0.5);
-  --gold: #f5c842;
-  --gold2: #ffd966;
-  --green: #1fdb8a;
-  --red: #ff4f4f;
-  --amber: #ffaa33;
-  --blue: #4d9fff;
-  --purple: #a78bfa;
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0d0f14;--surface:#13161e;--surface2:#1a1e28;--border:#252a36;
+  --text:#f0ede8;--muted:rgba(240,237,232,0.45);
+  --green:#1fdb8a;--red:#ff4f4f;--amber:#ffaa33;--gold:#f5c842;--blue:#4d9fff;
 }
-* { margin:0; padding:0; box-sizing:border-box; }
-body {
-  font-family: 'Space Grotesk', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-}
-body::before {
-  content:'';
-  position:fixed; inset:0;
-  background:
-    radial-gradient(ellipse 60% 40% at 10% 10%, rgba(245,200,66,0.07) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 50% at 90% 80%, rgba(77,159,255,0.06) 0%, transparent 60%),
-    radial-gradient(ellipse 40% 30% at 50% 50%, rgba(31,219,138,0.04) 0%, transparent 60%);
-  pointer-events:none; z-index:0;
-}
-
-/* ── TOP BAR ── */
-.topbar {
-  position: fixed; top:0; left:0; right:0; z-index:100;
-  height: 58px;
-  background: rgba(6,8,16,0.95);
-  border-bottom: 1px solid rgba(245,200,66,0.2);
-  backdrop-filter: blur(20px);
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 28px;
-}
-.topbar-logo {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 13px; font-weight: 700;
-  display: flex; align-items: center; gap: 10px;
-}
-.topbar-logo .shield { font-size: 18px; }
-.topbar-logo .name { color: #fff; }
-.topbar-logo .tag {
-  background: linear-gradient(135deg, var(--gold), var(--gold2));
-  color: #000; font-size: 9px; font-weight: 900;
-  padding: 3px 8px; border-radius: 4px; letter-spacing: 1.5px;
-  box-shadow: 0 0 12px rgba(245,200,66,0.4);
-}
-.topbar-right {
-  display: flex; align-items: center; gap: 16px;
-  font-family: 'JetBrains Mono', monospace; font-size: 11px;
-}
-.live-dot {
-  width: 7px; height: 7px; background: var(--green); border-radius: 50%;
-  box-shadow: 0 0 8px rgba(31,219,138,0.8);
-  animation: pulse-dot 2s infinite;
-}
-@keyframes pulse-dot { 0%,100%{box-shadow:0 0 4px rgba(31,219,138,0.5)} 50%{box-shadow:0 0 14px rgba(31,219,138,1)} }
-.topbar-time { color: var(--muted); }
-.refresh-btn {
-  background: rgba(255,255,255,0.05); border: 1px solid var(--border2);
-  color: var(--muted); padding: 5px 12px; border-radius: 6px;
-  font-size: 11px; font-family: 'JetBrains Mono', monospace;
-  cursor: pointer; transition: all 0.15s;
-}
-.refresh-btn:hover { color: #fff; border-color: rgba(255,255,255,0.3); }
-
+body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 /* ── LAYOUT ── */
-.layout {
-  display: flex; padding-top: 58px; min-height: 100vh;
-}
-.sidebar {
-  width: 220px; flex-shrink: 0;
-  background: var(--s1);
-  border-right: 1px solid var(--border);
-  position: fixed; top: 58px; bottom: 0;
-  padding: 20px 0; overflow-y: auto;
-}
-.nav-section { margin-bottom: 24px; }
-.nav-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase;
-  color: rgba(245,200,66,0.5); padding: 0 16px; margin-bottom: 6px;
-}
-.nav-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 9px 16px; font-size: 13px; font-weight: 500;
-  color: rgba(255,255,255,0.65); cursor: pointer;
-  transition: all 0.15s; border-left: 2px solid transparent;
-}
-.nav-item:hover { color: #fff; background: rgba(255,255,255,0.04); }
-.nav-item.active { color: var(--gold); background: rgba(245,200,66,0.08); border-left-color: var(--gold); font-weight: 700; }
-.nav-badge {
-  margin-left: auto; background: var(--red);
-  color: #fff; font-size: 9px; font-weight: 800;
-  padding: 2px 6px; border-radius: 10px;
-  font-family: 'JetBrains Mono', monospace;
-  box-shadow: 0 0 8px rgba(255,79,79,0.5);
-}
-
-/* ── MAIN ── */
-.main {
-  flex:1; margin-left: 220px; padding: 28px;
-  background: var(--bg); position: relative; z-index: 1;
-}
-.page { display:none; }
-.page.active { display:block; animation: fadeIn 0.2s ease; }
-@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
-
-/* ── PAGE HEADER ── */
-.page-hd { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:24px; }
-.page-title { font-size:22px; font-weight:800; color:#fff; letter-spacing:-0.5px; }
-.page-sub { font-size:11px; color:var(--muted); margin-top:4px; font-family:'JetBrains Mono',monospace; }
-
-/* ── STAT CARDS ── */
-.stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
-.stat {
-  background: linear-gradient(135deg, var(--s2) 0%, var(--s3) 100%);
-  border: 1px solid var(--border);
-  border-radius: 12px; padding: 18px; position: relative; overflow: hidden;
-  transition: all 0.2s;
-}
-.stat:hover { border-color: rgba(245,200,66,0.25); transform: translateY(-2px); }
-.stat::before {
-  content:''; position:absolute; top:0; left:0; right:0; height:2px;
-  background: linear-gradient(90deg, transparent, var(--accent, var(--gold)), transparent);
-  opacity: 0.7;
-}
-.stat-label {
-  font-family:'JetBrains Mono',monospace; font-size:9px;
-  letter-spacing:2px; text-transform:uppercase;
-  color:var(--muted); margin-bottom:8px;
-}
-.stat-val { font-size:30px; font-weight:800; letter-spacing:-1px; line-height:1; }
-.stat-note { font-size:11px; color:var(--muted); margin-top:6px; }
-
+.shell{display:flex;min-height:100vh}
+.sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.main{flex:1;overflow-y:auto}
+/* ── SIDEBAR ── */
+.logo{padding:20px 16px;border-bottom:1px solid var(--border)}
+.logo-text{font-size:18px;font-weight:700;letter-spacing:.5px}
+.logo-badge{background:var(--gold);color:#000;font-size:10px;font-weight:800;padding:2px 7px;border-radius:4px;margin-left:6px}
+.nav-section{padding:16px 12px 4px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13px;color:rgba(240,237,232,0.7);transition:all .15s;margin:1px 4px}
+.nav-item:hover{background:rgba(255,255,255,0.05);color:var(--text)}
+.nav-item.active{background:rgba(245,200,66,0.12);color:var(--gold)}
+.sidebar-footer{margin-top:auto;padding:16px;border-top:1px solid var(--border);font-size:11px;color:var(--muted)}
+/* ── HEADER ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:10}
+.topbar-title{font-size:20px;font-weight:700}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+/* ── PAGES ── */
+.page{display:none;padding:24px}
+.page.active{display:block}
 /* ── CARDS ── */
-.card {
-  background: linear-gradient(135deg, var(--s2) 0%, var(--s3) 100%);
-  border: 1px solid var(--border);
-  border-radius: 12px; padding: 20px; transition: border-color 0.2s;
-}
-.card:hover { border-color: var(--border2); }
-.card-title {
-  font-size:14px; font-weight:700; margin-bottom:16px;
-  display:flex; align-items:center; justify-content:space-between;
-}
-.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px; }
-.grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:16px; }
-
-/* ── BADGES ── */
-.badge {
-  display:inline-flex; align-items:center; gap:4px;
-  padding:3px 9px; border-radius:20px;
-  font-size:10px; font-weight:700; letter-spacing:0.5px;
-  text-transform:uppercase; font-family:'JetBrains Mono',monospace;
-}
-.badge-green { background:rgba(31,219,138,0.15); color:var(--green); border:1px solid rgba(31,219,138,0.3); }
-.badge-red { background:rgba(255,79,79,0.15); color:var(--red); border:1px solid rgba(255,79,79,0.3); }
-.badge-amber { background:rgba(255,170,51,0.15); color:var(--amber); border:1px solid rgba(255,170,51,0.3); }
-.badge-gold { background:rgba(245,200,66,0.15); color:var(--gold); border:1px solid rgba(245,200,66,0.3); }
-.badge-blue { background:rgba(77,159,255,0.15); color:var(--blue); border:1px solid rgba(77,159,255,0.3); }
-.badge-muted { background:rgba(255,255,255,0.06); color:var(--muted); border:1px solid var(--border); }
-
-/* ── USER ROW ── */
-.user-row {
-  display:flex; align-items:center; gap:12px;
-  padding:12px; border-radius:10px;
-  background:rgba(255,255,255,0.03);
-  border:1px solid var(--border);
-  margin-bottom:8px; transition:border-color 0.15s;
-}
-.user-row:hover { border-color:var(--border2); }
-.avatar {
-  width:36px; height:36px; border-radius:8px;
-  background:linear-gradient(135deg,rgba(245,200,66,0.2),rgba(77,159,255,0.2));
-  display:flex; align-items:center; justify-content:center;
-  font-size:14px; font-weight:800; color:var(--gold); flex-shrink:0;
-}
-.user-info { flex:1; }
-.user-name { font-size:13px; font-weight:700; }
-.user-meta { font-size:10px; color:var(--muted); font-family:'JetBrains Mono',monospace; margin-top:2px; }
-.user-actions { display:flex; gap:6px; }
-.btn-approve {
-  background:rgba(31,219,138,0.15); color:var(--green);
-  border:1px solid rgba(31,219,138,0.3);
-  padding:5px 12px; border-radius:7px;
-  font-size:11px; font-weight:700; cursor:pointer;
-  font-family:'Space Grotesk',sans-serif; transition:all 0.15s;
-}
-.btn-approve:hover { background:rgba(31,219,138,0.25); }
-.btn-reject {
-  background:rgba(255,79,79,0.15); color:var(--red);
-  border:1px solid rgba(255,79,79,0.3);
-  padding:5px 12px; border-radius:7px;
-  font-size:11px; font-weight:700; cursor:pointer;
-  font-family:'Space Grotesk',sans-serif; transition:all 0.15s;
-}
-.btn-reject:hover { background:rgba(255,79,79,0.25); }
-.btn-revoke {
-  background:rgba(255,170,51,0.1); color:var(--amber);
-  border:1px solid rgba(255,170,51,0.25);
-  padding:5px 10px; border-radius:7px;
-  font-size:11px; font-weight:700; cursor:pointer;
-  font-family:'Space Grotesk',sans-serif; transition:all 0.15s;
-}
-
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px}
+.stat-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.stat-val{font-size:32px;font-weight:700;font-family:'JetBrains Mono',monospace}
 /* ── TABLE ── */
-.table-wrap { overflow-x:auto; border-radius:10px; border:1px solid var(--border); }
-table { width:100%; border-collapse:collapse; font-size:12px; }
-thead { background:var(--s3); border-bottom:1px solid var(--border); }
-th { font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); padding:11px 14px; text-align:left; }
-td { padding:11px 14px; border-bottom:1px solid rgba(255,255,255,0.04); vertical-align:middle; }
-tr:last-child td { border:none; }
-tr:hover td { background:rgba(255,255,255,0.02); }
-
-/* ── EMPTY ── */
-.empty { text-align:center; padding:40px 20px; color:var(--muted); }
-.empty-icon { font-size:32px; margin-bottom:10px; opacity:0.4; }
-
-/* ── LOADING ── */
-.loading { display:flex; align-items:center; gap:8px; padding:14px; color:var(--muted); font-size:13px; }
-.dots span { display:inline-block; width:5px; height:5px; background:var(--gold); border-radius:50%; margin:0 2px; animation:bounce 1.2s infinite; }
-.dots span:nth-child(2){animation-delay:.2s} .dots span:nth-child(3){animation-delay:.4s}
-@keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}
-
-/* ── ACTIVITY LOG ITEM ── */
-.log-item {
-  display:flex; align-items:flex-start; gap:12px;
-  padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05);
-}
-.log-item:last-child { border:none; }
-.log-icon { font-size:16px; flex-shrink:0; margin-top:2px; }
-.log-body { flex:1; }
-.log-main { font-size:12px; font-weight:600; }
-.log-sub { font-size:10px; color:var(--muted); font-family:'JetBrains Mono',monospace; margin-top:2px; }
-.log-time { font-size:10px; color:rgba(255,255,255,0.3); font-family:'JetBrains Mono',monospace; flex-shrink:0; }
-
-/* ── RANK ── */
-.rank-item {
-  display:flex; align-items:center; gap:10px;
-  padding:10px; border-radius:8px;
-  background:rgba(255,255,255,0.03); border:1px solid var(--border);
-  margin-bottom:6px;
-}
-.rank-num { font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:800; width:24px; }
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{padding:10px 12px;text-align:left;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);font-weight:600}
+.tbl td{padding:12px;border-bottom:1px solid rgba(37,42,54,0.5);font-size:13px;vertical-align:middle}
+.tbl tr:hover td{background:rgba(255,255,255,0.02)}
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-green{background:rgba(31,219,138,0.12);color:var(--green);border:1px solid rgba(31,219,138,0.2)}
+.badge-amber{background:rgba(255,170,51,0.12);color:var(--amber);border:1px solid rgba(255,170,51,0.2)}
+.badge-red{background:rgba(255,79,79,0.12);color:var(--red);border:1px solid rgba(255,79,79,0.2)}
+.badge-blue{background:rgba(77,159,255,0.12);color:var(--blue);border:1px solid rgba(77,159,255,0.2)}
+/* ── BUTTONS ── */
+.btn{padding:7px 14px;border-radius:8px;border:none;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;transition:all .15s}
+.btn-green{background:rgba(31,219,138,0.15);color:var(--green);border:1px solid rgba(31,219,138,0.3)}
+.btn-green:hover{background:rgba(31,219,138,0.25)}
+.btn-red{background:rgba(255,79,79,0.12);color:var(--red);border:1px solid rgba(255,79,79,0.25)}
+.btn-red:hover{background:rgba(255,79,79,0.22)}
+.btn-amber{background:rgba(255,170,51,0.12);color:var(--amber);border:1px solid rgba(255,170,51,0.25)}
+.btn-amber:hover{background:rgba(255,170,51,0.22)}
+/* ── PENDING CARD ── */
+.pending-card{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;margin-bottom:10px}
+.avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--amber));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#000;flex-shrink:0}
+.user-info{flex:1;margin-left:12px}
+.user-name{font-size:14px;font-weight:600}
+.user-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.actions{display:flex;gap:8px}
+/* ── TOAST ── */
+#toast{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast-item{padding:12px 20px;border-radius:10px;font-weight:700;font-size:13px;box-shadow:0 8px 32px rgba(0,0,0,0.4);animation:slideUp .2s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+/* ── MISC ── */
+.page-header{margin-bottom:20px}
+.page-title{font-size:22px;font-weight:700;margin-bottom:4px}
+.page-sub{font-size:13px;color:var(--muted)}
+.section-title{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:14px}
+.empty{text-align:center;padding:40px;color:var(--muted)}
+.empty-icon{font-size:36px;margin-bottom:10px}
+.refresh-btn{background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-family:inherit}
+.refresh-btn:hover{background:rgba(255,255,255,0.1)}
 </style>
 </head>
 <body>
+<div class="shell">
 
-<!-- TOP BAR -->
-<div class="topbar">
-  <div class="topbar-logo">
-    <span class="shield">🛡</span>
-    <span class="name">Properties<strong style="color:var(--gold)">714</strong></span>
-    <span class="tag">ADMIN</span>
-  </div>
-  <div class="topbar-right">
-    <div class="live-dot"></div>
-    <span style="color:var(--green);font-weight:700">Supabase Live</span>
-    <span class="topbar-time" id="clock"></span>
-    <button class="refresh-btn" onclick="loadAll()">↻ Refresh</button>
-  </div>
-</div>
-
-<div class="layout">
-
-<!-- SIDEBAR -->
-<nav class="sidebar">
-  <div class="nav-section">
-    <div class="nav-label">Overview</div>
-    <div class="nav-item active" onclick="showPage('overview',this)">📊 Dashboard</div>
-    <div class="nav-item" onclick="showPage('users',this)">👥 Usuarios <span class="nav-badge" id="pending-badge" style="display:none">0</span></div>
-  </div>
-  <div class="nav-section">
-    <div class="nav-label">Actividad</div>
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-text">Properties714<span class="logo-badge">ADMIN</span></div>
+    </div>
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active" onclick="showPage('dashboard',this)">📊 Dashboard</div>
+    <div class="nav-item" onclick="showPage('users',this)">👥 Usuarios</div>
+    <div class="nav-section">Actividad</div>
     <div class="nav-item" onclick="showPage('deals',this)">⚡ Deals Analizados</div>
     <div class="nav-item" onclick="showPage('properties',this)">🏠 Propiedades</div>
-  </div>
-</nav>
-
-<!-- MAIN -->
-<main class="main">
-
-<!-- ══ OVERVIEW PAGE ══ -->
-<div id="page-overview" class="page active">
-  <div class="page-hd">
-    <div>
-      <div class="page-title">📊 Control Center</div>
-      <div class="page-sub">Properties714 · Admin Dashboard · Tiempo real</div>
+    <div class="sidebar-footer">
+      <div style="color:var(--green);display:flex;align-items:center;gap:6px;margin-bottom:4px">
+        <span style="width:6px;height:6px;border-radius:50%;background:var(--green)"></span>
+        Supabase Live
+      </div>
+      <div id="clock" style="font-family:'JetBrains Mono',monospace;font-size:12px"></div>
     </div>
   </div>
 
-  <div class="stats-row">
-    <div class="stat" style="--accent:var(--gold)">
-      <div class="stat-label">Total Usuarios</div>
-      <div class="stat-val" id="st-total" style="color:var(--gold)">—</div>
-      <div class="stat-note">Registrados en plataforma</div>
-    </div>
-    <div class="stat" style="--accent:var(--amber)">
-      <div class="stat-label">⏳ Pendientes</div>
-      <div class="stat-val" id="st-pending" style="color:var(--amber)">—</div>
-      <div class="stat-note">Esperando aprobación</div>
-    </div>
-    <div class="stat" style="--accent:var(--green)">
-      <div class="stat-label">✅ Activos</div>
-      <div class="stat-val" id="st-active" style="color:var(--green)">—</div>
-      <div class="stat-note">Usuarios aprobados</div>
-    </div>
-    <div class="stat" style="--accent:var(--blue)">
-      <div class="stat-label">📊 Deals</div>
-      <div class="stat-val" id="st-deals" style="color:var(--blue)">—</div>
-      <div class="stat-note">Total analizados</div>
-    </div>
-  </div>
-
-  <div class="grid-2">
-    <div class="card">
-      <div class="card-title">⏳ Solicitudes Pendientes</div>
-      <div id="ov-pending">
-        <div class="loading"><div class="dots"><span></span><span></span><span></span></div>Cargando...</div>
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="page-title">Control Center</div>
+      <div class="topbar-right">
+        <span style="font-size:12px;color:var(--muted)">Properties714 · Admin</span>
+        <button class="refresh-btn" onclick="loadAll()">↻ Actualizar</button>
       </div>
     </div>
-    <div class="card">
-      <div class="card-title">🕐 Actividad Reciente</div>
-      <div id="ov-activity">
-        <div class="loading"><div class="dots"><span></span><span></span><span></span></div>Cargando...</div>
+
+    <!-- DASHBOARD PAGE -->
+    <div id="page-dashboard" class="page active">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">Total Usuarios</div><div class="stat-val" id="ov-total" style="color:var(--gold)">—</div></div>
+        <div class="stat-card"><div class="stat-label">Pendientes</div><div class="stat-val" id="ov-pending" style="color:var(--amber)">—</div></div>
+        <div class="stat-card"><div class="stat-label">Activos</div><div class="stat-val" id="ov-active" style="color:var(--green)">—</div></div>
+        <div class="stat-card"><div class="stat-label">Deals</div><div class="stat-val" id="ov-deals" style="color:var(--blue)">—</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="card">
+          <div class="section-title">⏳ Solicitudes Pendientes</div>
+          <div id="dash-pending"><div class="empty"><div class="empty-icon">✅</div><p>No hay pendientes</p></div></div>
+        </div>
+        <div class="card">
+          <div class="section-title">🕐 Últimos Registros</div>
+          <div id="dash-recent"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- USERS PAGE -->
+    <div id="page-users" class="page">
+      <div class="page-header">
+        <div class="page-title">Usuarios</div>
+        <div class="page-sub">Gestión de acceso a la plataforma</div>
+      </div>
+      <div class="card">
+        <div style="display:flex;gap:8px;margin-bottom:16px">
+          <button class="btn btn-amber" onclick="filterUsers('pending')" id="ftab-pending">⏳ Pendientes</button>
+          <button class="btn" style="background:rgba(255,255,255,0.05);border:1px solid var(--border)" onclick="filterUsers('all')" id="ftab-all">Todos</button>
+          <button class="btn btn-green" onclick="filterUsers('approved')" id="ftab-approved">✅ Aprobados</button>
+          <button class="btn btn-red" onclick="filterUsers('rejected')" id="ftab-rejected">🚫 Rechazados</button>
+        </div>
+        <div id="users-list"></div>
+      </div>
+    </div>
+
+    <!-- DEALS PAGE -->
+    <div id="page-deals" class="page">
+      <div class="page-header"><div class="page-title">Deals Analizados</div></div>
+      <div class="card">
+        <table class="tbl">
+          <thead><tr><th>Propiedad</th><th>Score</th><th>Recomendación</th><th>ROI</th><th>Ganancia</th><th>Fecha</th></tr></thead>
+          <tbody id="deals-tbody"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px">Cargando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PROPERTIES PAGE -->
+    <div id="page-properties" class="page">
+      <div class="page-header"><div class="page-title">Propiedades</div></div>
+      <div class="card">
+        <table class="tbl">
+          <thead><tr><th>Dirección</th><th>Ciudad</th><th>Precio</th><th>ARV</th><th>Estrategia</th><th>Fecha</th></tr></thead>
+          <tbody id="props-tbody"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px">Cargando...</td></tr></tbody>
+        </table>
       </div>
     </div>
   </div>
-
-  <div class="grid-2">
-    <div class="card">
-      <div class="card-title">🏆 Usuarios más Activos</div>
-      <div id="ov-top-users">
-        <div class="loading"><div class="dots"><span></span><span></span><span></span></div>Cargando...</div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">📈 Últimos Registros</div>
-      <div id="ov-new-users">
-        <div class="loading"><div class="dots"><span></span><span></span><span></span></div>Cargando...</div>
-      </div>
-    </div>
-  </div>
 </div>
 
-<!-- ══ USERS PAGE ══ -->
-<div id="page-users" class="page">
-  <div class="page-hd">
-    <div>
-      <div class="page-title">👥 Gestión de Usuarios</div>
-      <div class="page-sub">Aprobar, revocar o eliminar accesos</div>
-    </div>
-    <button class="refresh-btn" onclick="loadUsers()" style="padding:8px 16px;font-size:12px">↻ Actualizar</button>
-  </div>
-
-  <div class="grid-3" id="users-stats-row">
-    <div class="card" style="text-align:center;padding:14px">
-      <div style="font-size:26px;font-weight:800;color:var(--gold)" id="us-total">—</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:4px;font-family:monospace;letter-spacing:1px">TOTAL</div>
-    </div>
-    <div class="card" style="text-align:center;padding:14px">
-      <div style="font-size:26px;font-weight:800;color:var(--amber)" id="us-pending">—</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:4px;font-family:monospace;letter-spacing:1px">PENDIENTES</div>
-    </div>
-    <div class="card" style="text-align:center;padding:14px">
-      <div style="font-size:26px;font-weight:800;color:var(--green)" id="us-approved">—</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:4px;font-family:monospace;letter-spacing:1px">APROBADOS</div>
-    </div>
-  </div>
-
-  <div class="card" style="margin-bottom:14px">
-    <div class="card-title">⏳ Pendientes de Aprobación</div>
-    <div id="users-pending-list">
-      <div class="empty"><div class="empty-icon">✅</div><p>No hay solicitudes pendientes</p></div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">Todos los Usuarios</div>
-    <div id="users-all-list">
-      <div class="loading"><div class="dots"><span></span><span></span><span></span></div>Cargando...</div>
-    </div>
-  </div>
-</div>
-
-<!-- ══ DEALS PAGE ══ -->
-<div id="page-deals" class="page">
-  <div class="page-hd">
-    <div>
-      <div class="page-title">⚡ Deals Analizados</div>
-      <div class="page-sub">Todos los análisis de inversión realizados</div>
-    </div>
-  </div>
-  <div class="card">
-    <div id="deals-table">
-      <div class="loading"><div class="dots"><span></span><span></span><span></span></div>Cargando deals...</div>
-    </div>
-  </div>
-</div>
-
-<!-- ══ PROPERTIES PAGE ══ -->
-<div id="page-properties" class="page">
-  <div class="page-hd">
-    <div>
-      <div class="page-title">🏠 Propiedades</div>
-      <div class="page-sub">Todas las propiedades en el sistema</div>
-    </div>
-  </div>
-  <div class="card">
-    <div id="props-table">
-      <div class="loading"><div class="dots"><span></span><span></span><span></span></div>Cargando propiedades...</div>
-    </div>
-  </div>
-</div>
-
-</main>
-</div>
+<div id="toast"></div>
 
 <script>
 // ── CONFIG ──
-const SUPABASE_URL  = 'https://euvbddxunitgiqduckwf.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1dmJkZHh1bml0Z2lxZHVja3dmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4MjMyMDQsImV4cCI6MjA4ODM5OTIwNH0.Fq3UwLA_VCPaoA7fShgT8nCk9xXw1sNENoZ_jZyz6Qs';
-const N8N_ADMIN    = 'https://n8n.properties714.com/webhook/gpai-admin-users';
+const SUPABASE_URL     = 'https://euvbddxunitgiqduckwf.supabase.co';
+const SERVICE_ROLE_KEY = 'sb_secret_N6MQWoT0nT8hHPqFEFnLWQ_QDKN4iIq';
+
+// ── Admin Supabase client (bypasses RLS completely) ──
 const { createClient } = supabase;
-const SB = createClient(SUPABASE_URL, SUPABASE_ANON);
+const ADMIN_SB = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+  auth: { autoRefreshToken: false, persistSession: false }
+});
 
-// ── Admin data fetcher — bypasses RLS via n8n ──
-async function adminFetch(action, payload={}) {
-  const res = await fetch(N8N_ADMIN, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action, ...payload })
-  });
-  if (!res.ok) throw new Error('n8n error ' + res.status);
-  return res.json();
-}
-
-// ── CLOCK ──
-function updateClock() {
+// ── Clock ──
+setInterval(() => {
   document.getElementById('clock').textContent = new Date().toLocaleTimeString('es-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-}
-setInterval(updateClock, 1000); updateClock();
+}, 1000);
 
-// ── NAVIGATION ──
+// ── Navigation ──
 function showPage(id, el) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   if (el) el.classList.add('active');
-  if (id === 'users') loadUsers();
-  if (id === 'deals') loadDeals();
+  const titles = {dashboard:'Control Center', users:'Usuarios', deals:'Deals Analizados', properties:'Propiedades'};
+  document.getElementById('page-title').textContent = titles[id] || id;
+  if (id === 'users')      loadUsers();
+  if (id === 'deals')      loadDeals();
   if (id === 'properties') loadProperties();
 }
 
-// ── LOAD ALL DATA ──
+// ── Toast ──
+function toast(msg, color='green') {
+  const colors = {green:'rgba(31,219,138,0.95)',amber:'rgba(255,170,51,0.95)',red:'rgba(255,79,79,0.95)'};
+  const t = document.createElement('div');
+  t.className = 'toast-item';
+  t.style.background = colors[color] || colors.green;
+  t.style.color = '#000';
+  t.textContent = msg;
+  document.getElementById('toast').appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ══════════════════════════════════════
+//  LOAD ALL DATA
+// ══════════════════════════════════════
+let ALL_USERS = [];
+let CURRENT_FILTER = 'pending';
+
 async function loadAll() {
   await Promise.all([loadOverview(), loadUsers(), loadDeals(), loadProperties()]);
 }
 
-// ── OVERVIEW ──
 async function loadOverview() {
-  let users = [], props = [], analyses = [];
-  try {
-    const [uRes, pRes, aRes] = await Promise.all([
-      adminFetch('list_users'),
-      adminFetch('list_properties'),
-      adminFetch('list_analyses')
-    ]);
-    users    = Array.isArray(uRes) ? uRes : (uRes.users    || []);
-    props    = Array.isArray(pRes) ? pRes : (pRes.properties || []);
-    analyses = Array.isArray(aRes) ? aRes : (aRes.analyses   || aRes.deals || []);
-  } catch(e) {
-    console.error('n8n admin error:', e);
-    // fallback to direct Supabase (works if RLS allows it)
-    const [uR, pR, aR] = await Promise.all([
-      SB.from('user_profiles').select('*').order('created_at',{ascending:false}),
-      SB.from('properties').select('*').order('created_at',{ascending:false}).limit(30),
-      SB.from('deal_analysis').select('*').order('created_at',{ascending:false}).limit(30)
-    ]);
-    users    = uR.data || [];
-    props    = pR.data || [];
-    analyses = aR.data || [];
-  }
+  const { data: users } = await ADMIN_SB.from('user_profiles').select('*').order('created_at',{ascending:false});
+  const { data: deals } = await ADMIN_SB.from('deal_analysis').select('id').limit(1000);
 
-  const pending  = users.filter(u => u.approval_status === 'pending');
-  const approved = users.filter(u => u.approval_status === 'approved');
+  ALL_USERS = users || [];
+  const pending  = ALL_USERS.filter(u => u.approval_status === 'pending');
+  const approved = ALL_USERS.filter(u => u.approval_status === 'approved');
 
-  // Stats
-  document.getElementById('st-total').textContent   = users.length;
-  document.getElementById('st-pending').textContent = pending.length;
-  document.getElementById('st-active').textContent  = approved.length;
-  document.getElementById('st-deals').textContent   = analyses.length;
+  document.getElementById('ov-total').textContent   = ALL_USERS.length;
+  document.getElementById('ov-pending').textContent = pending.length;
+  document.getElementById('ov-active').textContent  = approved.length;
+  document.getElementById('ov-deals').textContent   = (deals||[]).length;
 
-  // Pending badge
-  const badge = document.getElementById('pending-badge');
-  badge.style.display = pending.length > 0 ? 'inline-block' : 'none';
-  badge.textContent = pending.length;
-
-  // Pending list
-  const pendingEl = document.getElementById('ov-pending');
+  // Pending cards
+  const pendingEl = document.getElementById('dash-pending');
   if (!pending.length) {
     pendingEl.innerHTML = '<div class="empty"><div class="empty-icon">✅</div><p>No hay solicitudes pendientes</p></div>';
   } else {
-    pendingEl.innerHTML = pending.map(u => userRowHTML(u, true)).join('');
+    pendingEl.innerHTML = pending.map(u => `
+      <div class="pending-card">
+        <div class="avatar">${(u.full_name||'?')[0].toUpperCase()}</div>
+        <div class="user-info">
+          <div class="user-name">${u.full_name || 'Sin nombre'}</div>
+          <div class="user-meta">${u.role||'investor'} · ${new Date(u.created_at).toLocaleDateString('es-US',{month:'short',day:'numeric',year:'numeric'})}</div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-green" onclick="approveUser('${u.id}')">✅ Aprobar</button>
+          <button class="btn btn-red"   onclick="rejectUser('${u.id}')">✗ Rechazar</button>
+        </div>
+      </div>`).join('');
   }
 
-  // Activity (recent analyses + signups merged)
-  const activity = [
-    ...analyses.slice(0,5).map(a => ({ type:'deal', time:a.created_at, text:`Deal analizado`, sub:a.recommendation||'Pendiente', score:a.deal_score })),
-    ...users.slice(0,5).map(u => ({ type:'user', time:u.created_at, text:`Nuevo usuario: ${u.full_name||'Sin nombre'}`, sub:u.approval_status }))
-  ].sort((a,b) => new Date(b.time)-new Date(a.time)).slice(0,8);
-
-  document.getElementById('ov-activity').innerHTML = activity.length ? activity.map(a => `
-    <div class="log-item">
-      <span class="log-icon">${a.type==='deal'?'⚡':'👤'}</span>
-      <div class="log-body">
-        <div class="log-main">${a.text}</div>
-        <div class="log-sub">${a.sub} ${a.score?'· Score: '+a.score:''}</div>
+  // Recent users
+  document.getElementById('dash-recent').innerHTML = ALL_USERS.slice(0,6).map(u => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div class="avatar" style="width:30px;height:30px;font-size:12px">${(u.full_name||'?')[0].toUpperCase()}</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600">${u.full_name||'Sin nombre'}</div>
+        <div style="font-size:11px;color:var(--muted)">${new Date(u.created_at).toLocaleDateString('es-US',{month:'short',day:'numeric'})}</div>
       </div>
-      <span class="log-time">${timeAgo(a.time)}</span>
-    </div>`).join('') : '<div class="empty"><p>Sin actividad</p></div>';
-
-  // Top users
-  const dealCount = {};
-  props.forEach(p => { if (p.user_id) dealCount[p.user_id] = (dealCount[p.user_id]||0)+1; });
-  const topUsers = approved.map(u => ({...u, deals: dealCount[u.id]||0})).sort((a,b)=>b.deals-a.deals).slice(0,5);
-  const rankColors = ['var(--gold)','rgba(200,200,200,0.8)','rgba(180,120,60,0.9)','var(--muted)','var(--muted)'];
-  document.getElementById('ov-top-users').innerHTML = topUsers.length ? topUsers.map((u,i) => `
-    <div class="rank-item">
-      <span class="rank-num" style="color:${rankColors[i]}">#${i+1}</span>
-      <div class="avatar">${(u.full_name||'?')[0].toUpperCase()}</div>
-      <div style="flex:1"><div style="font-size:13px;font-weight:600">${u.full_name||'Sin nombre'}</div>
-      <div style="font-size:10px;color:var(--muted);font-family:monospace">${u.role||'user'}</div></div>
-      <span style="font-size:12px;font-weight:700;color:var(--blue)">${u.deals} deals</span>
-    </div>`).join('') : '<div class="empty"><p>Sin datos</p></div>';
-
-  // New users
-  document.getElementById('ov-new-users').innerHTML = users.slice(0,6).map(u => `
-    <div class="user-row" style="margin-bottom:6px">
-      <div class="avatar">${(u.full_name||'?')[0].toUpperCase()}</div>
-      <div class="user-info">
-        <div class="user-name">${u.full_name||'Sin nombre'}</div>
-        <div class="user-meta">${u.role||'user'} · ${formatDate(u.created_at)}</div>
-      </div>
-      <span class="badge ${u.approval_status==='approved'?'badge-green':u.approval_status==='pending'?'badge-amber':'badge-red'}">${u.approval_status==='approved'?'Activo':u.approval_status==='pending'?'Pendiente':'Rechazado'}</span>
+      ${statusBadge(u.approval_status)}
     </div>`).join('');
 }
 
-// ── USERS ──
+function statusBadge(s) {
+  if (s==='approved') return '<span class="badge badge-green">Activo</span>';
+  if (s==='pending')  return '<span class="badge badge-amber">Pendiente</span>';
+  return '<span class="badge badge-red">Rechazado</span>';
+}
+
+// ── Users ──
 async function loadUsers() {
-  let all = [];
-  try {
-    const d = await adminFetch('list_users');
-    all = Array.isArray(d) ? d : (d.users || []);
-  } catch(e) {
-    const { data } = await SB.from('user_profiles').select('*').order('created_at',{ascending:false});
-    all = data || [];
-  }
-  const pending  = all.filter(u => u.approval_status === 'pending');
-  const approved = all.filter(u => u.approval_status === 'approved');
-  const rejected = all.filter(u => u.approval_status === 'rejected');
+  const { data } = await ADMIN_SB.from('user_profiles').select('*').order('created_at',{ascending:false});
+  ALL_USERS = data || [];
+  renderUsers(CURRENT_FILTER);
+}
 
-  document.getElementById('us-total').textContent   = all.length;
-  document.getElementById('us-pending').textContent = pending.length;
-  document.getElementById('us-approved').textContent= approved.length;
+function filterUsers(f) {
+  CURRENT_FILTER = f;
+  document.querySelectorAll('[id^="ftab-"]').forEach(b => {
+    b.style.opacity = '0.5';
+  });
+  const active = document.getElementById('ftab-'+f);
+  if (active) active.style.opacity = '1';
+  renderUsers(f);
+}
 
-  const pendingEl = document.getElementById('users-pending-list');
-  pendingEl.innerHTML = pending.length
-    ? pending.map(u => userRowHTML(u, true)).join('')
-    : '<div class="empty"><div class="empty-icon">✅</div><p>No hay solicitudes pendientes</p></div>';
-
-  document.getElementById('users-all-list').innerHTML = `
-    <div class="table-wrap"><table>
+function renderUsers(filter) {
+  const list = filter === 'all' ? ALL_USERS : ALL_USERS.filter(u => u.approval_status === filter);
+  const el = document.getElementById('users-list');
+  if (!list.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">👤</div><p>No hay usuarios en esta categoría</p></div>'; return; }
+  el.innerHTML = `
+    <table class="tbl">
       <thead><tr><th>Usuario</th><th>Rol</th><th>Estado</th><th>Registrado</th><th>Acciones</th></tr></thead>
-      <tbody>` +
-    all.map(u => `<tr>
-      <td>
-        <div style="font-weight:700">${u.full_name||'Sin nombre'}</div>
-        <div style="font-size:10px;color:var(--muted);font-family:monospace">${u.id.substring(0,16)}...</div>
-      </td>
-      <td><span class="badge ${u.role==='admin'?'badge-gold':u.role==='investor'?'badge-blue':'badge-muted'}">${u.role||'user'}</span></td>
-      <td><span class="badge ${u.approval_status==='approved'?'badge-green':u.approval_status==='pending'?'badge-amber':'badge-red'}">${u.approval_status==='approved'?'Activo':u.approval_status==='pending'?'Pendiente':'Rechazado'}</span></td>
-      <td style="font-size:11px;color:var(--muted);font-family:monospace">${formatDate(u.created_at)}</td>
-      <td>
-        <div style="display:flex;gap:5px">
-          ${u.approval_status!=='approved' ? `<button class="btn-approve" onclick="approveUser('${u.id}')">✅ Aprobar</button>` : `<button class="btn-revoke" onclick="revokeUser('${u.id}')">Revocar</button>`}
-          ${u.approval_status==='approved'||u.approval_status==='pending' ? `<button class="btn-reject" onclick="rejectUser('${u.id}')">✗ Rechazar</button>` : ''}
-        </div>
-      </td>
-    </tr>`).join('') +
-    `</tbody></table></div>`;
+      <tbody>
+        ${list.map(u => `
+          <tr>
+            <td>
+              <div style="font-weight:600">${u.full_name||'Sin nombre'}</div>
+              <div style="font-size:11px;color:var(--muted);font-family:monospace">${u.id.substring(0,20)}...</div>
+            </td>
+            <td>${roleBadge(u.role)}</td>
+            <td>${statusBadge(u.approval_status)}</td>
+            <td style="color:var(--muted);font-size:12px">${new Date(u.created_at).toLocaleDateString('es-US',{month:'short',day:'numeric',year:'numeric'})}</td>
+            <td>
+              <div style="display:flex;gap:6px">
+                ${u.approval_status !== 'approved' ? `<button class="btn btn-green" onclick="approveUser('${u.id}')">✅ Aprobar</button>` : ''}
+                ${u.approval_status === 'approved' ? `<button class="btn btn-amber" onclick="revokeUser('${u.id}')">Revocar</button>` : ''}
+                ${u.approval_status !== 'rejected' ? `<button class="btn btn-red" onclick="rejectUser('${u.id}')">✗ Rechazar</button>` : ''}
+              </div>
+            </td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
 }
 
-function userRowHTML(u, showActions) {
-  return `<div class="user-row">
-    <div class="avatar">${(u.full_name||'?')[0].toUpperCase()}</div>
-    <div class="user-info">
-      <div class="user-name">${u.full_name||'Sin nombre'}</div>
-      <div class="user-meta">${u.role||'user'} · ${formatDate(u.created_at)}</div>
-    </div>
-    ${showActions ? `<div class="user-actions">
-      <button class="btn-approve" onclick="approveUser('${u.id}')">✅ Aprobar</button>
-      <button class="btn-reject"  onclick="rejectUser('${u.id}')">✗ Rechazar</button>
-    </div>` : `<span class="badge badge-amber">Pendiente</span>`}
-  </div>`;
+function roleBadge(r) {
+  if (r==='admin')    return '<span class="badge badge-blue">Admin</span>';
+  if (r==='investor') return '<span class="badge" style="background:rgba(245,200,66,0.12);color:var(--gold);border:1px solid rgba(245,200,66,0.2)">Investor</span>';
+  return '<span class="badge" style="background:rgba(255,255,255,0.06);color:var(--muted);border:1px solid var(--border)">'+( r||'user')+'</span>';
 }
 
-// ── DEALS ──
-async function loadDeals() {
-  let deals = [];
-  try {
-    const d = await adminFetch('list_deals');
-    deals = Array.isArray(d) ? d : (d.deals || d.analyses || []);
-  } catch(e) {
-    const { data } = await SB.from('deal_analysis')
-      .select('*, properties(address,city,zip,asking_price,estimated_rehab,user_id)')
-      .order('created_at',{ascending:false}).limit(100);
-    deals = data || [];
-  }
-
-  const el = document.getElementById('deals-table');
-  if (!deals.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">⚡</div><p>Sin deals todavía</p></div>'; return; }
-
-  el.innerHTML = `<div class="table-wrap"><table>
-    <thead><tr><th>Propiedad</th><th>Ciudad</th><th>Precio</th><th>ARV</th><th>Profit Est.</th><th>ROI</th><th>Score</th><th>Recomendación</th><th>Fecha</th></tr></thead>
-    <tbody>` +
-    deals.map(d => {
-      const p = d.properties || {};
-      const score = d.deal_score;
-      const sc = score>=70?'var(--green)':score>=45?'var(--amber)':'var(--red)';
-      const recBadge = d.recommendation==='GOOD DEAL'
-        ? `<span class="badge badge-green">✅ Bueno</span>`
-        : d.recommendation==='MARGINAL DEAL'
-        ? `<span class="badge badge-amber">⚠ Marginal</span>`
-        : d.recommendation
-        ? `<span class="badge badge-red">❌ Rechazar</span>`
-        : `<span class="badge badge-muted">—</span>`;
-      return `<tr>
-        <td style="font-weight:700;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.address||'—'}</td>
-        <td style="color:var(--muted)">${p.city||'—'}</td>
-        <td style="font-family:monospace;color:var(--gold)">$${parseInt(p.asking_price||0).toLocaleString()}</td>
-        <td style="font-family:monospace;color:var(--blue)">$${parseInt(d.arv||0).toLocaleString()}</td>
-        <td style="font-family:monospace;color:${d.estimated_profit>0?'var(--green)':'var(--red)'}">$${parseInt(d.estimated_profit||0).toLocaleString()}</td>
-        <td style="font-family:monospace;font-weight:700">${d.roi?parseFloat(d.roi).toFixed(1)+'%':'—'}</td>
-        <td style="font-family:monospace;font-weight:800;color:${sc}">${score||'—'}</td>
-        <td>${recBadge}</td>
-        <td style="font-size:11px;color:var(--muted);font-family:monospace">${formatDate(d.created_at)}</td>
-      </tr>`;
-    }).join('') +
-    `</tbody></table></div>`;
-}
-
-// ── PROPERTIES ──
-async function loadProperties() {
-  let props = [];
-  try {
-    const d = await adminFetch('list_properties');
-    props = Array.isArray(d) ? d : (d.properties || []);
-  } catch(e) {
-    const { data } = await SB.from('properties').select('*').order('created_at',{ascending:false}).limit(100);
-    props = data || [];
-  }
-
-  const el = document.getElementById('props-table');
-  if (!props.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🏠</div><p>Sin propiedades todavía</p></div>'; return; }
-
-  el.innerHTML = `<div class="table-wrap"><table>
-    <thead><tr><th>Dirección</th><th>Ciudad</th><th>ZIP</th><th>Asking Price</th><th>Est. Rehab</th><th>ARV</th><th>Estrategia</th><th>Estado</th><th>Fecha</th></tr></thead>
-    <tbody>` +
-    props.map(p => `<tr>
-      <td style="font-weight:700">${p.address}</td>
-      <td style="color:var(--muted)">${p.city||'—'}</td>
-      <td style="font-family:monospace">${p.zip||'—'}</td>
-      <td style="font-family:monospace;color:var(--gold)">$${parseInt(p.asking_price||0).toLocaleString()}</td>
-      <td style="font-family:monospace">$${parseInt(p.estimated_rehab||0).toLocaleString()}</td>
-      <td style="font-family:monospace;color:var(--blue)">$${parseInt(p.estimated_arv||0).toLocaleString()}</td>
-      <td><span class="badge badge-muted">${p.strategy_candidate||'—'}</span></td>
-      <td><span class="badge ${p.status==='analyzing'?'badge-amber':'badge-muted'}">${p.status||'new'}</span></td>
-      <td style="font-size:11px;color:var(--muted);font-family:monospace">${formatDate(p.created_at)}</td>
-    </tr>`).join('') +
-    `</tbody></table></div>`;
-}
-
-// ── USER ACTIONS ──
+// ── Approve / Reject / Revoke ──
 async function approveUser(id) {
-  const btn = event?.target;
-  if (btn) { btn.disabled=true; btn.textContent='Aprobando...'; }
-  try {
-    await adminFetch('approve_user', { user_id: id });
-    showToast('✅ Usuario aprobado');
-  } catch(e) {
-    await SB.from('user_profiles').update({ approval_status:'approved', approved_at: new Date().toISOString() }).eq('id', id);
-    showToast('✅ Usuario aprobado');
-  }
+  const { error } = await ADMIN_SB.from('user_profiles')
+    .update({ approval_status:'approved', approved_at: new Date().toISOString() })
+    .eq('id', id);
+  if (error) { toast('❌ Error: '+error.message, 'red'); return; }
+  toast('✅ Usuario aprobado', 'green');
   await loadAll();
 }
+
 async function rejectUser(id) {
   if (!confirm('¿Rechazar este usuario? No podrá acceder a la plataforma.')) return;
-  try {
-    await adminFetch('reject_user', { user_id: id });
-    showToast('🚫 Usuario rechazado', 'amber');
-  } catch(e) {
-    await SB.from('user_profiles').update({ approval_status:'rejected' }).eq('id', id);
-    showToast('🚫 Usuario rechazado', 'amber');
-  }
+  const { error } = await ADMIN_SB.from('user_profiles')
+    .update({ approval_status:'rejected' })
+    .eq('id', id);
+  if (error) { toast('❌ Error: '+error.message, 'red'); return; }
+  toast('🚫 Usuario rechazado', 'amber');
   await loadAll();
 }
+
 async function revokeUser(id) {
   if (!confirm('¿Revocar acceso a este usuario?')) return;
-  try {
-    await adminFetch('reject_user', { user_id: id });
-    showToast('⚠️ Acceso revocado', 'amber');
-  } catch(e) {
-    await SB.from('user_profiles').update({ approval_status:'pending' }).eq('id', id);
-    showToast('⚠️ Acceso revocado', 'amber');
-  }
+  const { error } = await ADMIN_SB.from('user_profiles')
+    .update({ approval_status:'pending' })
+    .eq('id', id);
+  if (error) { toast('❌ Error: '+error.message, 'red'); return; }
+  toast('⚠️ Acceso revocado', 'amber');
   await loadAll();
 }
-function showToast(msg, color='green') {
-  const c = { green:'rgba(31,219,138,0.95)', amber:'rgba(255,170,51,0.95)', red:'rgba(255,79,79,0.95)' };
-  const t = document.createElement('div');
-  t.textContent = msg;
-  t.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;background:'+c[color]+';color:#000;padding:12px 20px;border-radius:10px;font-weight:700;font-size:13px;box-shadow:0 8px 32px rgba(0,0,0,0.4)';
-  document.body.appendChild(t);
-  setTimeout(()=>t.remove(), 3000);
+
+// ── Deals ──
+async function loadDeals() {
+  const { data } = await ADMIN_SB
+    .from('deal_analysis')
+    .select('*, properties(address,city,zip)')
+    .order('created_at',{ascending:false})
+    .limit(100);
+  const deals = data || [];
+  const tbody = document.getElementById('deals-tbody');
+  if (!deals.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px">Sin deals aún</td></tr>'; return; }
+  tbody.innerHTML = deals.map(d => {
+    const rc = d.recommendation==='GOOD DEAL'?'badge-green':d.recommendation==='MARGINAL DEAL'?'badge-amber':'badge-red';
+    const sc = (d.deal_score||0)>=70?'var(--green)':(d.deal_score||0)>=45?'var(--amber)':'var(--red)';
+    return `<tr>
+      <td><div style="font-weight:600">${d.properties?.address||'—'}</div><div style="font-size:11px;color:var(--muted)">${d.properties?.city||''} ${d.properties?.zip||''}</div></td>
+      <td><span style="font-family:monospace;font-weight:700;color:${sc}">${d.deal_score||0}</span></td>
+      <td><span class="badge ${rc}">${d.recommendation||'—'}</span></td>
+      <td style="color:${(d.roi||0)>15?'var(--green)':'var(--muted)'}">${parseFloat(d.roi||0).toFixed(1)}%</td>
+      <td style="color:${(d.estimated_profit||0)>0?'var(--green)':'var(--red)'}">$${Math.round(d.estimated_profit||0).toLocaleString()}</td>
+      <td style="color:var(--muted);font-size:12px">${new Date(d.created_at).toLocaleDateString('es-US',{month:'short',day:'numeric',year:'numeric'})}</td>
+    </tr>`;
+  }).join('');
 }
 
-// ── HELPERS ──
-function formatDate(d) {
-  if (!d) return '—';
-  return new Date(d).toLocaleDateString('es-US',{month:'short',day:'numeric',year:'numeric'});
-}
-function timeAgo(d) {
-  const diff = (Date.now() - new Date(d)) / 1000;
-  if (diff < 60)   return `${Math.round(diff)}s`;
-  if (diff < 3600) return `${Math.round(diff/60)}m`;
-  if (diff < 86400)return `${Math.round(diff/3600)}h`;
-  return `${Math.round(diff/86400)}d`;
+// ── Properties ──
+async function loadProperties() {
+  const { data } = await ADMIN_SB
+    .from('properties')
+    .select('*')
+    .order('created_at',{ascending:false})
+    .limit(100);
+  const props = data || [];
+  const tbody = document.getElementById('props-tbody');
+  if (!props.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px">Sin propiedades aún</td></tr>'; return; }
+  tbody.innerHTML = props.map(p => `<tr>
+    <td style="font-weight:600">${p.address||'—'}</td>
+    <td>${p.city||'—'}</td>
+    <td>$${(p.asking_price||0).toLocaleString()}</td>
+    <td style="color:var(--green)">$${(p.estimated_arv||0).toLocaleString()}</td>
+    <td><span class="badge badge-blue">${p.strategy_candidate||'—'}</span></td>
+    <td style="color:var(--muted);font-size:12px">${new Date(p.created_at).toLocaleDateString('es-US',{month:'short',day:'numeric',year:'numeric'})}</td>
+  </tr>`).join('');
 }
 
-// ── INIT ──
+// ── Init ──
 loadAll();
-// Auto-refresh every 60s
 setInterval(loadAll, 60000);
 </script>
 </body>
