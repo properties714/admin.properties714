@@ -334,7 +334,7 @@ function roleBadge(r) {
 // ── Approve / Reject / Revoke ──
 async function approveUser(id) {
   const { error } = await ADMIN_SB.from('user_profiles')
-    .update({ approval_status:'approved', approved_at: new Date().toISOString() })
+    .update({ approval_status:'approved', subscription_status:'active', approved_at: new Date().toISOString() })
     .eq('id', id);
   if (error) { toast('❌ Error: '+error.message, 'red'); return; }
   toast('✅ Usuario aprobado', 'green');
